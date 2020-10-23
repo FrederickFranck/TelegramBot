@@ -27,9 +27,10 @@ async def checkForMessages():
                 if ("/getTemperature" in text):
                     await replyTemperature(ID_FREDERICK)
             if(data["result"][i]["message"]["chat"]["id"] == ID_JEROEN):
+                text = data["result"][i]["message"]["text"]
                 #print(text)
                 if ("/getTemperature" in text):
-                    await replyTemperature(ID_FREDERICK)
+                    await replyTemperature(ID_JEROEN)
 
     elif(not data["ok"]):
         print("Error")
