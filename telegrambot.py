@@ -13,7 +13,6 @@ LATEST_TEMP = -1
 URL = "https://api.telegram.org/bot1121749211:AAFmyn4kPHJBqItW22wCmwb1p0gMJjBRcOY/"
 
 async def checkForMessages():
-    print("checking")
     global OFFSET
     response = requests.post(url = (URL + "getUpdates"),params= {"offset":OFFSET})
     data = response.json()
@@ -21,14 +20,14 @@ async def checkForMessages():
         for i in range(len(data["result"])):
             if((data["result"][i]["update_id"]) >= OFFSET):
                     OFFSET = data["result"][i]["update_id"] + 1
-                    print(OFFSET)
+                    #print(OFFSET)
             if(data["result"][i]["message"]["chat"]["id"] == ID_FREDERICK):
                 text = data["result"][i]["message"]["text"]
-                print(text)
+                #print(text)
                 if ("/getTemperature" in text):
                     await replyTemperature(ID_FREDERICK)
             if(data["result"][i]["message"]["chat"]["id"] == ID_JEROEN):
-                print(text)
+                #print(text)
                 if ("/getTemperature" in text):
                     await replyTemperature(ID_FREDERICK)
 
@@ -37,12 +36,17 @@ async def checkForMessages():
 
 
 async def replyTemperature(chat_id):
+    global LATEST_TEMP
     reply = "Temperature is {}°C".format(LATEST_TEMP)
     requests.post(url = (URL + "sendMessage"),params = {"chat_id":chat_id,"text":reply})
 
-
+async def checkUpdates():
+    while True:
+        await checkForMessages()
+        await asyncio.sleep(5)
 
 async def on_event(partition_context, event):
+    global LATEST_TEMP
     # Print the event data.
     #print("Received the event: \"{}\" from the partition with ID: \"{}\"".format(event.body_as_str(encoding='UTF-8'), partition_context.partition_id))
     if((event.body_as_str(encoding='UTF-8')[15:19]) == "0.0}"):
@@ -69,7 +73,7 @@ async def main():
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(main())
-    loop.create_task(checkForMessages())
+    loop.create_task(checkUpdates())
     loop.run_forever()
 
     # Run the main method.
