@@ -12,7 +12,7 @@ LATEST_TEMP = -1
 
 URL = "https://api.telegram.org/bot1121749211:AAFmyn4kPHJBqItW22wCmwb1p0gMJjBRcOY/"
 
-def checkForMessages():
+async def checkForMessages():
     print("checking")
     global OFFSET
     response = requests.post(url = (URL + "getUpdates"),params= {"offset":OFFSET})
@@ -26,17 +26,17 @@ def checkForMessages():
                 text = data["result"][i]["message"]["text"]
                 print(text)
                 if ("/getTemperature" in text):
-                    replyTemperature(ID_FREDERICK)
+                    await replyTemperature(ID_FREDERICK)
             if(data["result"][i]["message"]["chat"]["id"] == ID_JEROEN):
                 print(text)
                 if ("/getTemperature" in text):
-                    replyTemperature(ID_FREDERICK)
+                    await replyTemperature(ID_FREDERICK)
 
     elif(not data["ok"]):
         print("Error")
 
 
-def replyTemperature(chat_id):
+async def replyTemperature(chat_id):
     reply = "Temperature is {}°C".format(LATEST_TEMP)
     requests.post(url = (URL + "sendMessage"),params = {"chat_id":chat_id,"text":reply})
 
@@ -45,7 +45,10 @@ def replyTemperature(chat_id):
 async def on_event(partition_context, event):
     # Print the event data.
     #print("Received the event: \"{}\" from the partition with ID: \"{}\"".format(event.body_as_str(encoding='UTF-8'), partition_context.partition_id))
-    LATEST_TEMP = float(event.body_as_str(encoding='UTF-8')[15:19])
+    if((event.body_as_str(encoding='UTF-8')[15:19]) == "0.0}"):
+        LATEST_TEMP = 0
+    else:
+        LATEST_TEMP = float(event.body_as_str(encoding='UTF-8')[15:19])
     print(LATEST_TEMP)
     # Update the checkpoint so that the program doesn't read the events
     # that it has already read when you run it next time.
@@ -65,5 +68,9 @@ async def main():
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
+    loop.create_task(main())
+    loop.create_task(checkForMessages())
+    loop.run_forever()
+
     # Run the main method.
-    loop.run_until_complete(main())
+    #loop.run_until_complete(main())
